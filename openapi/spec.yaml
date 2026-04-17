@@ -1,0 +1,366 @@
+---
+openapi: "3.1.1"
+info:
+  title: "CheckVIES automated API"
+  version: "1.0.0"
+servers:
+- url: "https://api.checkvies.com"
+  description: "Production API service"
+paths:
+  /api/check/details/{id}:
+    get:
+      tags:
+      - "ApiVatCheck"
+      summary: "Get details of a single VAT number check request"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "Key identifier"
+        required: true
+        schema:
+          type: "string"
+          format: "uuid"
+      responses:
+        "200":
+          description: "Request details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VatCheckRequestWithResultDto"
+        "422":
+          description: "Request cannot be processed"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: "Too many requests"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "System error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - ApiKeyScheme: []
+  /api/check/start:
+    post:
+      tags:
+      - "ApiVatCheck"
+      summary: "Start VAT number check"
+      requestBody:
+        description: "VAT number check parameters"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartCheckRequestDto"
+        required: true
+      responses:
+        "200":
+          description: "VAT number check started"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckRequestCreatedDto"
+        "422":
+          description: "Request cannot be processed"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: "Too many requests"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "System error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - ApiKeyScheme: []
+  /api/check/state-list:
+    post:
+      tags:
+      - "ApiVatCheck"
+      summary: "Get states of VAT number requests list"
+      requestBody:
+        description: "List of VAT check requests identifiers"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestListStateCheckDto"
+        required: true
+      responses:
+        "200":
+          description: "List of VAT check requests states"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestListStateDto"
+        "422":
+          description: "Request cannot be processed"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: "Too many requests"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "System error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - ApiKeyScheme: []
+webhooks: {}
+components:
+  schemas:
+    RequestStateDto:
+      type: "string"
+      title: "RequestStateDto"
+      description: "Request state"
+      enum:
+      - "Pending"
+      - "Success"
+      - "CacheMiss"
+      - "Timeout"
+      - "Error"
+      - "TemporaryError"
+      - "NoOnlineBalance"
+    ViesCheckErrorCodeDto:
+      type:
+      - "string"
+      - "null"
+      title: "ViesCheckErrorCodeDto"
+      description: "Error code"
+      enum:
+      - "ViesOverload"
+      - "RequesterVatInvalid"
+      - "InvalidVat"
+      - "BlockedVat"
+      - "InvalidInput"
+      - "ViesUnavailable"
+    VatCheckResultDetailsDto:
+      type: "object"
+      title: "VatCheckResultDetailsDto"
+      description: "VAT check result"
+      required:
+      - "valid"
+      - "cacheUsed"
+      properties:
+        valid:
+          type: "boolean"
+          description: "VAT is valid or not"
+        requestIdentifier:
+          type:
+          - "string"
+          - "null"
+          description: "VIES request identifier"
+        requestDate:
+          type:
+          - "string"
+          - "null"
+          description: "VIES request date"
+        cacheUsed:
+          type: "boolean"
+          description: "Whether cache was used"
+        name:
+          type:
+          - "string"
+          - "null"
+          description: "Name of the VAT owner"
+        address:
+          type:
+          - "string"
+          - "null"
+          description: "Address VAT owner"
+        traderName:
+          type:
+          - "string"
+          - "null"
+          description: "Trader name"
+        traderStreet:
+          type:
+          - "string"
+          - "null"
+          description: "Trader street"
+        traderPostalCode:
+          type:
+          - "string"
+          - "null"
+          description: "Trader postal code"
+        traderCity:
+          type:
+          - "string"
+          - "null"
+          description: "Trader city"
+        traderCompanyType:
+          type:
+          - "string"
+          - "null"
+          description: "Trader company type"
+    VatCheckRequestWithResultDto:
+      type: "object"
+      title: "VatCheckRequestWithResultDto"
+      description: "Request and result pair for a VAT check"
+      required:
+      - "requestId"
+      - "state"
+      - "number"
+      - "isoAlpha2"
+      - "requestDate"
+      - "changeDate"
+      properties:
+        requestId:
+          type: "string"
+          description: "Request identifier"
+          format: "uuid"
+        state:
+          $ref: "#/components/schemas/RequestStateDto"
+        errorCode:
+          $ref: "#/components/schemas/ViesCheckErrorCodeDto"
+        number:
+          type: "string"
+          description: "VAT number"
+        isoAlpha2:
+          type: "string"
+          description: "EU member state ISO alpha2 code"
+        requestDate:
+          type: "string"
+          description: "Date of request"
+        result:
+          oneOf:
+          - $ref: "#/components/schemas/VatCheckResultDetailsDto"
+          - type: "null"
+        changeDate:
+          type: "string"
+          description: "Request last change date"
+    ErrorResponse:
+      type: "object"
+      title: "ErrorResponse"
+      description: "Common error response"
+      required:
+      - "error_code"
+      properties:
+        error_code:
+          type: "string"
+          description: "Error code"
+        error_text:
+          type:
+          - "string"
+          - "null"
+          description: "Error text"
+    CacheUsageOptionsDto:
+      type: "object"
+      title: "CacheUsageOptionsDto"
+      description: "Cache usage properties"
+      required:
+      - "cacheOnly"
+      properties:
+        maxAgeMinutes:
+          type:
+          - "string"
+          - "null"
+          description: "Max age of cached result, minutes"
+        cacheOnly:
+          type: "boolean"
+          description: "Use cache only, don't use direct requests"
+    StartCheckRequestDto:
+      type: "object"
+      title: "StartCheckRequestDto"
+      description: "Request for a VAT check"
+      required:
+      - "number"
+      properties:
+        number:
+          type: "string"
+          description: "VAT number"
+        isoAlpha2:
+          type:
+          - "string"
+          - "null"
+          description: "EU member state ISO alpha2 code"
+        cache:
+          oneOf:
+          - $ref: "#/components/schemas/CacheUsageOptionsDto"
+          - type: "null"
+        idempotencyKey:
+          type:
+          - "string"
+          - "null"
+          description: "Idempotency key, used to prevent duplicate requests"
+          format: "uuid"
+    CheckRequestCreatedDto:
+      type: "object"
+      title: "CheckRequestCreatedDto"
+      description: "Check request created"
+      required:
+      - "id"
+      properties:
+        id:
+          type: "string"
+          description: "Request identifier"
+          format: "uuid"
+    RequestListStateCheckDto:
+      type: "object"
+      title: "RequestListStateCheckDto"
+      description: "State retrieval of a VAT check requests list"
+      required:
+      - "requests"
+      properties:
+        requests:
+          type: "array"
+          description: "VAT check requests identifiers"
+          items:
+            type: "string"
+            format: "uuid"
+    RequestListRetrievedStateItemDto:
+      type: "object"
+      title: "RequestListRetrievedStateItemDto"
+      description: "VAT check request properties"
+      required:
+      - "requestId"
+      - "state"
+      properties:
+        requestId:
+          type: "string"
+          description: "VAT check request identifier"
+          format: "uuid"
+        state:
+          $ref: "#/components/schemas/RequestStateDto"
+    RequestListStateDto:
+      type: "object"
+      title: "RequestListStateDto"
+      description: "States of a VAT check requests list"
+      required:
+      - "requests"
+      properties:
+        requests:
+          type: "array"
+          description: "VAT check requests and their states"
+          items:
+            $ref: "#/components/schemas/RequestListRetrievedStateItemDto"
+  securitySchemes:
+    BearerUserScheme:
+      scheme: "bearer"
+      bearerFormat: "JWT"
+      description: "JWT Bearer Authentication"
+      type: "http"
+    ApiKeyScheme:
+      name: "X-API-Key"
+      in: "header"
+      description: "API Key Authentication"
+      type: "apiKey"
