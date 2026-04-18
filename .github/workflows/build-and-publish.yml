@@ -54,4 +54,4 @@ jobs:
           ENCODED_GPG_SECRET_KEY: ${{ secrets.ENCODED_GPG_SECRET_KEY }}
           JRELEASER_GPG_PASSPHRASE: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
           JRELEASER_GENERIC_TOKEN: ${{ vars.JRELEASER_GENERIC_TOKEN }}
-        run: ./gradlew :client:jreleaserDeploy
+        run: ./gradlew jreleaserDeploy
