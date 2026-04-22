@@ -81,14 +81,15 @@ publishing {
                 licenses {
                     license {
                         name.set("Apache-2.0 license")
-                        url.set("https://github.com/checkvies/client-lib-jvm")
+                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
                     }
                 }
                 developers {
                     developer {
                         id.set("checkvies")
-                        name.set("DEIMDAL DOO")
+                        name.set("CheckVIES team")
                         email.set("software@checkvies.com")
+                        organization.set("DEIMDAL DOO")
                     }
                 }
                 scm {
